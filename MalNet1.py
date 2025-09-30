@@ -24,8 +24,7 @@ from sklearn.metrics import confusion_matrix, roc_curve, auc, classification_rep
 import tensorflow as tf
 from tensorflow.keras import layers, models, backend as K, callbacks
 
-# ---------------------------
-# User settings - update these
+
 # ---------------------------
 IMAGE_DIR = r"E:\\data-kiran\\Recovered Data MSI\\B Tech Projects AITAM\\Batch B9 2023-2024\\images\\cell_images"
 # IMAGE_DIR must contain two subfolders: 'Parasitized' and 'Uninfected'
@@ -42,11 +41,8 @@ LSTM_UNITS = 128
 TIMESTEPS = 8
 DENSE_UNITS = 128
 
-MODEL_SAVE_PATH = "malaria_cnn_sam_lstm_tam.h5"
+MODEL_SAVE_PATH = "malnet1.h5"
 
-# ---------------------------
-# Robust loader
-# ---------------------------
 def load_images_from_folder(folder, label, size=SIZE):
     imgs = []
     labels = []
@@ -164,7 +160,7 @@ def build_model(input_shape=(SIZE, SIZE, 3),
 
     tam_vec, tam_alphas = temporal_attention_module(lstm_out, name='TAM')
 
-    # combine
+    # combine (Concateneation)
     combined = layers.Concatenate(name='concat')([sam_vec, tam_vec])
     x = layers.Dense(dense_units, activation='relu', name='fc1')(combined)
     x = layers.Dropout(0.5, name='drop_fc1')(x)
@@ -173,9 +169,9 @@ def build_model(input_shape=(SIZE, SIZE, 3),
     model = models.Model(inputs=inputs, outputs=out, name='CNN_SAM_LSTM_TAM')
     return model, tam_alphas
 
-# ---------------------------
-# Training & evaluation helpers
-# ---------------------------
+
+# Training & evaluation 
+
 def train_and_evaluate():
     X_train, X_test, y_train, y_test = build_dataset(IMAGE_DIR)
 
@@ -233,9 +229,8 @@ def train_and_evaluate():
 
     return model, (X_test, y_test), best_thresh, tam_alphas_layer
 
-# ---------------------------
+
 # Extract temporal attention weights for samples
-# ---------------------------
 def get_temporal_attention_weights(trained_model, tam_alphas_layer, sample_images):
     """
     Build a small model that outputs the tam_alphas tensor for given input images.
@@ -263,9 +258,9 @@ def get_temporal_attention_weights(trained_model, tam_alphas_layer, sample_image
     # alphas shape: (N, timesteps)
     return alphas
 
-# ---------------------------
+
 # Run
-# ---------------------------
+
 if __name__ == '__main__':
     model, test_data, best_thresh, tam_alphas_layer = train_and_evaluate()
     X_test, y_test = test_data
